@@ -14,8 +14,8 @@ def instant_snapshot():
 
 @app.route("/get_instant_snapshot", methods=["GET"])
 def get_instant_snapshot():
-    plex_data = clipplexAPI.PlexInfo("jonike") #DEBUG
-    snapshot = clipplexAPI.Snapshot(plex_data.media_path, plex_data.current_media_time_str, plex_data.media_fps)
+    server_data = clipplexAPI.ServerInfo("jonike") #DEBUG
+    snapshot = clipplexAPI.Snapshot(server_data.media_path, server_data.current_media_time_str, server_data.media_fps)
     snapshot._download_frames()
     return "Files downloaded"
 
@@ -23,10 +23,10 @@ def get_instant_snapshot():
 def get_current_stream():
     username = request.args.get("username")
     try:
-        plex = clipplexAPI.PlexInfo(username)
+        server = clipplexAPI.ServerInfo(username)
     except:
         return {"message": f"No session running for user {username}"}
-    return {"file_path": str(plex.media_path), "username": username, "current_time": plex.current_media_time_str, "media_title": plex.media_title}
+    return {"file_path": str(server.media_path), "username": username, "current_time": server.current_media_time_str, "media_title": server.media_title}
 
 @app.route("/instant_video.html", methods=["GET"])
 def timed_video():
@@ -43,13 +43,13 @@ def create_video():
     return jsonify(result)
 
 def get_instant_video(username, start, end):
-    plex_data = clipplexAPI.PlexInfo(username)
+    server_data = clipplexAPI.ServerInfo(username)
     clip_time = clipplexAPI.Utils().calculate_clip_time(start, end)
-    media_name = plex_data.media_title.replace(" ", "")
+    media_name = server_data.media_title.replace(" ", "")
     file_name = f"{username}_{media_name}_{int(time.time())}"
-    current_media_time = plex_data.current_media_time_str
-    print(f"Creating video of {clip_time} seconds starting at {start} for user {username} for file {plex_data.media_path}")
-    video = clipplexAPI.Video(plex_data, start, clip_time, file_name)
+    current_media_time = server_data.current_media_time_str
+    print(f"Creating video of {clip_time} seconds starting at {start} for user {username} for file {server_data.media_path}")
+    video = clipplexAPI.Video(server_data, start, clip_time, file_name)
     video.extract_video()
     return {"result":"success"}
 

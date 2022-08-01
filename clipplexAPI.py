@@ -9,10 +9,11 @@ import requests
 
 MEDIA_STATIC_PATH = "app/static/media"
 
-class PlexInfo:
-    def __init__(self, username):
-        self.plex_url = os.environ.get("PLEX_URL")
-        self.plex_token = os.environ.get("PLEX_TOKEN")
+class ServerInfo:
+    def __init__(self, platform, username):
+        self.platform = os.environ.get("SERVER_PLATFORM")
+        self.plex_url = os.environ.get("SERVER_URL")
+        self.plex_token = os.environ.get("SERVER_TOKEN")
         self.params = (("X-Plex-Token", {self.plex_token}),)
         self.sessions_xml = self._get_current_sessions_xml()
         self.username = username
@@ -32,8 +33,14 @@ class PlexInfo:
         Returns:
             float: Frame Rate of the video
         """
-        media_dict = list(list(list(list(list(self.media_path_xml)[0]))[0])[0])[0].attrib
-        return float(media_dict["frameRate"])
+        framerate = None
+        if self.platform == "plex":
+            media_dict = list(list(list(list(list(self.media_path_xml)[0]))[0])[0])[0].attrib
+            framerate = float(media_dict["frameRate"])
+        else:
+            framerate = -1.
+
+        return framerate
 
     def _get_current_media_time(self) -> int:
         """Get the offset between the start of the video and the current view position of the user.
@@ -41,8 +48,14 @@ class PlexInfo:
         Returns:
             int: Offset between start of the video and current view time
         """
-        media_dict = list(list(self.sessions_xml))[self.session_id].attrib
-        return int(media_dict["viewOffset"])
+        media_time = None
+        if self.platform == "plex":
+            media_dict = list(list(self.sessions_xml))[self.session_id].attrib
+            media_time = int(media_dict["viewOffset"])
+        else:
+            media_time = -1
+        
+        return media_time
 
     def _get_current_sessions_xml(self) -> ET:
         """Get the XML from plex for the current user session.
@@ -50,8 +63,11 @@ class PlexInfo:
         Returns:
             ET: XML tree of the current user session
         """
-        response = requests.get(f"{self.plex_url}/status/sessions", params=self.params)
-        xml_content = ET.fromstring(response.content)
+        xml_content = None
+        if self.platform == "plex":
+            response = requests.get(f"{self.plex_url}/status/sessions", params=self.params)
+            xml_content = ET.fromstring(response.content)
+           
         return xml_content
 
     def _get_file_path(self) -> str:
@@ -60,8 +76,12 @@ class PlexInfo:
         Returns:
             str: Path of the video being played
         """
-        media_dict = list(list(list(list(self.media_path_xml)[0]))[0])[0].attrib # REPLACE THAT BY A FIND PART TAG
-        return media_dict["file"]
+        file_path = None
+        if self.platform == "plex":
+            media_dict = list(list(list(list(self.media_path_xml)[0]))[0])[0].attrib # REPLACE THAT BY A FIND PART TAG
+            file_path = media_dict["file"]
+
+        return file_path
 
     def _get_file_title(self) -> str:
         """Get the title of the video currently played by the user.
@@ -69,14 +89,18 @@ class PlexInfo:
         Returns:
             str: If TV show, returns show + episode name, if movie, returns movie name.
         """
-        if self.media_type == "episode":
-            video_dict = list(list(self.media_path_xml))[0].attrib
-            title = video_dict["title"]
-            show_name = video_dict["grandparentTitle"]
-            return f"{show_name} - {title}"
-        else:
-            video_dict = list(list(self.media_path_xml))[0].attrib
-            return video_dict["title"]
+        file_title = None
+        if self.platform == "plex":
+            if self.media_type == "episode":
+                video_dict = list(list(self.media_path_xml))[0].attrib
+                title = video_dict["title"]
+                show_name = video_dict["grandparentTitle"]
+                file_title = f"{show_name} - {title}"
+            else:
+                video_dict = list(list(self.media_path_xml))[0].attrib
+                file_title = video_dict["title"]
+        
+        return file_title
 
     def _get_file_type(self) -> str:
         """Get the type of file of the video currently played by the user.
@@ -84,8 +108,12 @@ class PlexInfo:
         Returns:
             str: File type of the video being played
         """
-        video_dict = list(list(self.media_path_xml))[0].attrib
-        return video_dict["type"]        
+        file_type = None
+        if self.platform == "plex":
+            video_dict = list(list(self.media_path_xml))[0].attrib
+            file_type = video_dict["type"]  
+
+        return file_type      
 
     def _get_media_path_xml(self) -> ET:
         """Get the XML from plex for the current user session.
@@ -93,8 +121,11 @@ class PlexInfo:
         Returns:
             ET: XML tree of the current video being played
         """
-        response = requests.get(f"{self.plex_url}{self.media_key}", params=self.params)
-        xml_content = ET.fromstring(response.content)
+        xml_content = None
+        if self.platform == "plex":
+            response = requests.get(f"{self.plex_url}{self.media_key}", params=self.params)
+            xml_content = ET.fromstring(response.content)
+        
         return xml_content
 
     def _get_media_key(self) -> str:
@@ -103,8 +134,12 @@ class PlexInfo:
         Returns:
             str: Plex media key
         """
-        media_info = list(list(self.sessions_xml))[self.session_id].attrib
-        return media_info["key"]
+        media_key = None
+        if self.platform == "plex":
+            media_info = list(list(self.sessions_xml))[self.session_id].attrib
+            media_key = media_info["key"]
+        
+        return media_key
 
     def _get_session_id(self, username: str) -> int:
         """Get the plex session id of the current session for the current user.
@@ -115,11 +150,16 @@ class PlexInfo:
         Returns:
             int: Return the index of the session
         """
-        for sessions in list(self.sessions_xml):
-            for session in sessions:
-                if session.tag == "User" and session.attrib["title"] == username:
-                    return list(self.sessions_xml).index(sessions)
-        raise Exception(f"No stream running for user {username}")
+        session_id = None
+        if self.platform == "plex":
+            for sessions in list(self.sessions_xml):
+                for session in sessions:
+                    if session.tag == "User" and session.attrib["title"] == username:
+                        session_id = list(self.sessions_xml).index(sessions)
+                        break
+            raise Exception(f"No stream running for user {username}")
+
+        return session_id
 
 
 class Snapshot:
@@ -133,17 +173,17 @@ class Snapshot:
         a = subprocess.call(cmd, shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 class Video:
-    def __init__(self, plex_data: PlexInfo, time: str, duration, file_name: str):
-        self.media_path = plex_data.media_path
-        plex_attributes = list(list(plex_data.media_path_xml))[0].attrib
-        self.metadata_title = plex_attributes["title"]
-        self.metadata_current_media_time = plex_data.current_media_time_str
-        print(plex_data.username)
-        self.metadata_username = plex_data.username
-        if plex_data.media_type == "episode":
-            self.metadata_season = plex_attributes["parentIndex"]
-            self.metadata_episode_number = plex_attributes["index"]
-            self.metadata_showname = plex_attributes["grandparentTitle"]
+    def __init__(self, server_data: ServerInfo, time: str, duration, file_name: str):
+        self.media_path = server_data.media_path
+        server_attributes = list(list(server_data.media_path_xml))[0].attrib
+        self.metadata_title = server_attributes["title"]
+        self.metadata_current_media_time = server_data.current_media_time_str
+        print(server_data.username)
+        self.metadata_username = server_data.username
+        if server_data.media_type == "episode":
+            self.metadata_season = server_attributes["parentIndex"]
+            self.metadata_episode_number = server_attributes["index"]
+            self.metadata_showname = server_attributes["grandparentTitle"]
         else:
             self.metadata_season = ""
             self.metadata_episode_number = ""

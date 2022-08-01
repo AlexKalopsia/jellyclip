@@ -15,14 +15,16 @@ An in-depth paragraph about your project and overview of use.
 | PUID                 | 1000             | Optional  |
 | GUID                 | 1000             | Optional  |
 | TZ                   | America/New_York | Optional  |
-| PLEX_URL             | link to plex     | Mandatory |
-| PLEX_TOKEN           | token for plex   | Mandatory |
+| SERVER_PLATFORM      | `plex`/`jellyfin`| Mandatory |
+| SERVER_URL           | link to server   | Mandatory |
+| PLEX_TOKEN           | token for server | Mandatory |
 | STREAMABLE_LOGIN     | ...              | Optional  |
 | STREAMABLE_PASSWORD  | ...              | Optional  |
 
 Finding Plex token: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
 
 Volumes: You will need to mount two locations:
+
 * one that point to your media, in the exact same fashion your plex access these media (as the path are absolutes) 
 * one where the new clips will be created.
 
@@ -34,12 +36,13 @@ Port: Port 5000 is used to serve the frontend. (yes I will serve flask with guni
 
 Network: Need to be on the same network as your plex instance.
 
-```
+```bash
 docker run -d --name clipplex -p 9945:5000 -v /media:/media -v /volumes/clipplex:/app/app/static/media --restart always -e PUID=1000 -e PGID=1000 -e TZ=America/New_York -e PLEX_URL=YOURPLEXURL -e PLEX_TOKEN=YOURPLEXTOKEN jonnike/clipplex:latest
 ```
 
 ## Docker Compose Example
-```
+
+```yaml
 version: "3.5"
 networks:
   docker_internal_network:
@@ -54,8 +57,9 @@ networks:
       - PUID=1000
       - PGID=1000
       - TZ=America/New_York
-      - PLEX_URL=YOUR_PLEX_URL (example: http://plex:32400)
-      - PLEX_TOKEN=YOUR_PLEX_TOKEN
+      - SERVER_PLATFORM=jellyfin
+      - SERVER_URL=YOUR_PLEX_URL (example: http://jellyfin:8096)
+      - SERVER_TOKEN=YOUR_PLEX_TOKEN
       - STREAMABLE_LOGIN=YOUR_STREAMABLE_LOGIN
       - STREAMABLE_PASSWORD=YOUR_STREAMABLE_PASSWORD
     volumes:
@@ -74,7 +78,7 @@ Jo Nike
 ## Version History
 
 * 0.0.3
-    
+
     Initial Release
 
 ## License
