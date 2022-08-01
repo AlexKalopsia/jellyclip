@@ -2,7 +2,7 @@
 
 Have you ever, while watching something on your plex server, wanted to easily extract a clip out of a good movie or tv show you're watching to share it with your friend, family or the world? While this was always possible, the process can be complex for something "so simple".
 
-![](https://github.com/jo-nike/clipplex/blob/master/example.gif)
+![Preview of how Clipplex works](https://github.com/jo-nike/clipplex/blob/master/example.gif)
 
 ## Description
 
@@ -21,11 +21,11 @@ An in-depth paragraph about your project and overview of use.
 | STREAMABLE_LOGIN     | ...              | Optional  |
 | STREAMABLE_PASSWORD  | ...              | Optional  |
 
-Finding Plex token: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+Finding Plex token: [Link](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
 Volumes: You will need to mount two locations:
 
-* one that point to your media, in the exact same fashion your plex access these media (as the path are absolutes) 
+* one that point to your media, in the exact same fashion your plex access these media (as the path are absolutes)
 * one where the new clips will be created.
 
 media need to be mounted into the container path: /media

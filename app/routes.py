@@ -78,16 +78,16 @@ def streamable_upload():
 def login():
     return render_template("login.html")
 
-@app.route("/signin", methods=["POST"])
-def signin():
-    token = request.get_json()['token']
-    valid_login, user_details, user_group = check_credentials(token=token)
-    print(valid_login, user_details, user_group)
-
-def check_credentials(token=None):
-    """Verifies credentials for username and password.
-    Returns True and the user group on success or False and no user group"""
-    plex_login = plex_user_login(token=token)
-    
-    if plex_login is not None:
-        return True, plex_login[0], plex_login[1]
+#@app.route("/signin", methods=["POST"])
+#def signin():
+#    token = request.get_json()['token']
+#    valid_login, user_details, user_group = check_credentials(token=token)
+#    print(valid_login, user_details, user_group)
+#
+#def check_credentials(token=None):
+#    """Verifies credentials for username and password.
+#    Returns True and the user group on success or False and no user group"""
+#    plex_login = plex_user_login(token=token)
+#    
+#    if plex_login is not None:
+#        return True, plex_login[0], plex_login[1]
